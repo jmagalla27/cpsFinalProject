@@ -39,12 +39,14 @@ f_0 = 1E-4              # Fixed part ofcoriolis parameter [1/s]
 beta = 2E-11            # gradient of coriolis parameter [1/ms]
 rho_0 = 1024.0          # Density of fluid [kg/m^3)]
 tau_0 = 0.1             # Amplitude of wind stress [kg/ms^2]
+
 use_coriolis = True     # True if you want coriolis force
 use_friction = False     # True if you want bottom friction
 use_wind = False        # True if you want wind stress
 use_beta = True         # True if you want variation in coriolis
 use_source = False       # True if you want mass source into the domain
 use_sink = False       # True if you want mass sink out of the domain
+
 param_string = "\n================================================================"
 param_string += "\nuse_coriolis = {}\nuse_beta = {}".format(use_coriolis, use_beta)
 param_string += "\nuse_friction = {}\nuse_wind = {}".format(use_friction, use_wind)
@@ -70,18 +72,6 @@ param_string += "\ndx = {:.2f} km\ndy = {:.2f} km\ndt = {:.2f} s".format(dx, dy,
 if (use_friction is True):
     kappa_0 = 1/(5*24*3600)
     kappa = np.ones((N_x, N_y))*kappa_0
-    #kappa[0, :] = kappa_0
-    #kappa[-1, :] = kappa_0
-    #kappa[:, 0] = kappa_0
-    #kappa[:, -1] = kappa_0
-    #kappa[:int(N_x/15), :] = 0
-    #kappa[int(14*N_x/15)+1:, :] = 0
-    #kappa[:, :int(N_y/15)] = 0
-    #kappa[:, int(14*N_y/15)+1:] = 0
-    #kappa[int(N_x/15):int(2*N_x/15), int(N_y/15):int(14*N_y/15)+1] = 0
-    #kappa[int(N_x/15):int(14*N_x/15)+1, int(N_y/15):int(2*N_y/15)] = 0
-    #kappa[int(13*N_x/15)+1:int(14*N_x/15)+1, int(N_y/15):int(14*N_y/15)+1] = 0
-    #kappa[int(N_x/15):int(14*N_x/15)+1, int(13*N_y/15)+1:int(14*N_y/15)+1] = 0
     param_string += "\nkappa = {:g}\nkappa/beta = {:g} km".format(kappa_0, kappa_0/(beta*1000))
 
 # Define wind stress arrays if wind is enabled.
@@ -131,8 +121,10 @@ print(param_string)     # Also print parameters to screen
 # ==================================================================================
 u_n = np.zeros((N_x, N_y))      # To hold u at current time step
 u_np1 = np.zeros((N_x, N_y))    # To hold u at next time step
+
 v_n = np.zeros((N_x, N_y))      # To hold v at current time step
 v_np1 = np.zeros((N_x, N_y))    # To hold v at enxt time step
+
 eta_n = np.zeros((N_x, N_y))    # To hold eta at current time step
 eta_np1 = np.zeros((N_x, N_y))  # To hold eta at next time step
 
@@ -151,15 +143,8 @@ u_n[-1, :] = 0.0            # Ensuring initial u satisfy BC
 v_n[:, -1] = 0.0            # Ensuring initial v satisfy BC
 
 # Initial condition for eta.
-#eta_n[:, :] = np.sin(4*np.pi*X/L_y) + np.sin(4*np.pi*Y/L_y)
-#eta_n = np.exp(-((X-0)**2/(2*(L_R)**2) + (Y-0)**2/(2*(L_R)**2)))
-eta_n = np.exp(-((X-L_x/2.7)**2/(2*(0.05E+6)**2) + (Y-L_y/4)**2/(2*(0.05E+6)**2)))
-#eta_n[int(3*N_x/8):int(5*N_x/8),int(3*N_y/8):int(5*N_y/8)] = 1.0
-#eta_n[int(6*N_x/8):int(7*N_x/8),int(6*N_y/8):int(7*N_y/8)] = 1.0
-#eta_n[int(3*N_x/8):int(5*N_x/8), int(13*N_y/14):] = 1.0
-#eta_n[:, :] = 0.0
 
-#viz_tools.surface_plot3D(X, Y, eta_n, (X.min(), X.max()), (Y.min(), Y.max()), (eta_n.min(), eta_n.max()))
+eta_n = np.exp(-((X-L_x/2.7)**2/(2*(0.05E+6)**2) + (Y-L_y/4)**2/(2*(0.05E+6)**2)))
 
 # Sampling variables.
 eta_list = list(); u_list = list(); v_list = list()         # Lists to contain eta and u,v for animation
@@ -238,12 +223,6 @@ while (time_step < max_time_step):
 
     time_step += 1
 
-    # Samples for Hovmuller diagram and spectrum every sample_interval time step.
-    if (time_step % sample_interval == 0):
-        hm_sample.append(eta_n[:, int(N_y/2)])              # Sample middle of domain for Hovmuller
-        ts_sample.append(eta_n[int(N_x/2), int(N_y/2)])     # Sample center point for spectrum
-        t_sample.append(time_step*dt)                       # Keep track of sample times.
-
     # Store eta and (u, v) every anin_interval time step for animations.
     if (time_step % anim_interval == 0):
         print("Time: \t{:.2f} hours".format(time_step*dt/3600))
@@ -260,12 +239,7 @@ print("\nVisualizing results...")
 # ==================================================================================
 # ================== Visualizing results by call to external file ==================
 # ==================================================================================
-#viz_tools.pmesh_plot(X, Y, eta_n, "Final state of surface elevation $\eta$")
-#viz_tools.quiver_plot(X, Y, u_n, v_n, "Final state of velocity field $\mathbf{u}(x,y)$")
-#viz_tools.hovmuller_plot(x, t_sample, hm_sample)
-#viz_tools.plot_time_series_and_ft(t_sample, ts_sample)
-eta_anim = viz_tools.eta_animation(X, Y, eta_list, anim_interval*dt, "eta")
-#eta_surf_anim = viz_tools.eta_animation3D(X, Y, eta_list, anim_interval*dt, "eta_surface")
+
 quiv_anim = viz_tools.velocity_animation(X, Y, u_list, v_list, anim_interval*dt, "velocity")
 # ============================ Done with visualization =============================
 
